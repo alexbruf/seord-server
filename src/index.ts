@@ -49,10 +49,10 @@ app.post("/", async (c) => {
   };
 
   // Initialize SeoCheck with html content, main keyword and sub keywords
-  const seoCheck = new SeoCheck(contentJson, "liveinabroad.com");
+  const seoCheck = new SeoCheck(contentJson, "website.com");
 
   // Perform analysis
-  const result = seoCheck.analyzeSeo();
+  const result = await seoCheck.analyzeSeo();
 
   return c.json(result);
 });
