@@ -6,11 +6,74 @@ import remarkParse from "remark-parse";
 import remarkGfm from "remark-gfm";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
+import * as jsdom from "jsdom";
+const { JSDOM } = jsdom;
 
 const app = new Hono();
 
 app.get("/health", (c) => {
   return c.text("ok");
+});
+
+app.post("/html", async (c) => {
+  // overrides for grabbing stuff from the body
+  const body = await c.req.json<{
+    document: string;
+    title?: string;
+    keyword: string;
+    subKeywords?: string[];
+    metaDescription?: string;
+  }>();
+
+  const dom = new JSDOM(body.document);
+  let title =
+    body.title ??
+    dom.window.document.title ??
+    dom.window.document.querySelector("h1")?.textContent ??
+    "";
+  if (!title) {
+    title = "No Title Found";
+  }
+
+  let keyword = body.keyword;
+
+  let subKeywords =
+    body.subKeywords ??
+    Array.from(dom.window.document.querySelectorAll("meta"))
+      .filter(
+        (m) =>
+          (m.attributes.getNamedItem("name") || {}).textContent === "keywords",
+      )
+      .map((m) => m.content)?.[0]?.split(",") ??
+    [];
+
+  let metaDescription =
+    body.metaDescription ??
+    Array.from(dom.window.document.querySelectorAll("meta"))
+      .filter(
+        (m) =>
+          (m.attributes.getNamedItem("name") || {}).textContent ===
+          "description",
+      )
+      .map((m) => m.content)?.[0] ??
+    "";
+
+  const contentJson = {
+    title,
+    htmlText: body.document,
+    keyword,
+    subKeywords,
+    metaDescription,
+    languageCode: "en",
+    countryCode: "us",
+  };
+
+  const seoCheck = new SeoCheck(contentJson, "website.com");
+
+  // Perform analysis
+  const result = await seoCheck.analyzeSeo();
+
+  return c.json(result);
 });
 
 app.post("/", async (c) => {
