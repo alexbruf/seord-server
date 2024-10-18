@@ -7,9 +7,11 @@ import remarkGfm from "remark-gfm";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
 import {parseHTML} from 'linkedom';
+import { cors } from 'hono/cors'
 function JSDOM(html: string) { return parseHTML(html); }
 const app = new Hono();
 
+app.use('/*', cors())
 app.get("/health", (c) => {
   return c.text("ok");
 });
