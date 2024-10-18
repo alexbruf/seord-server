@@ -6,9 +6,8 @@ import remarkParse from "remark-parse";
 import remarkGfm from "remark-gfm";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
-import * as jsdom from "jsdom";
-const { JSDOM } = jsdom;
-
+import {parseHTML} from 'linkedom';
+function JSDOM(html: string) { return parseHTML(html); }
 const app = new Hono();
 
 app.get("/health", (c) => {
@@ -25,7 +24,7 @@ app.post("/html", async (c) => {
     metaDescription?: string;
   }>();
 
-  const dom = new JSDOM(body.document);
+  const dom = JSDOM(body.document);
   let title =
     body.title ??
     dom.window.document.title ??
