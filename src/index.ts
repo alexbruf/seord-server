@@ -1,4 +1,3 @@
-import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { SeoCheck } from "seord";
 import rehypeStringify from "rehype-stringify";
@@ -6,12 +5,14 @@ import remarkParse from "remark-parse";
 import remarkGfm from "remark-gfm";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
-import {parseHTML} from 'linkedom';
-import { cors } from 'hono/cors'
-function JSDOM(html: string) { return parseHTML(html); }
+import { parseHTML } from "linkedom/worker";
+import { cors } from "hono/cors";
+function JSDOM(html: string) {
+  return parseHTML(html);
+}
 const app = new Hono();
 
-app.use('/*', cors())
+app.use("/*", cors());
 app.get("/health", (c) => {
   return c.text("ok");
 });
@@ -27,8 +28,7 @@ app.post("/html", async (c) => {
   }>();
 
   const dom = JSDOM(body.document);
-  let title =
-    body.title ??
+  let title = body.title ??
     dom.window.document.title ??
     dom.window.document.querySelector("h1")?.textContent ??
     "";
@@ -38,8 +38,7 @@ app.post("/html", async (c) => {
 
   let keyword = body.keyword;
 
-  let subKeywords =
-    body.subKeywords ??
+  let subKeywords = body.subKeywords ??
     Array.from(dom.window.document.querySelectorAll("meta"))
       .filter(
         (m) =>
@@ -48,13 +47,12 @@ app.post("/html", async (c) => {
       .map((m) => m.content)?.[0]?.split(",") ??
     [];
 
-  let metaDescription =
-    body.metaDescription ??
+  let metaDescription = body.metaDescription ??
     Array.from(dom.window.document.querySelectorAll("meta"))
       .filter(
         (m) =>
           (m.attributes.getNamedItem("name") || {}).textContent ===
-          "description",
+            "description",
       )
       .map((m) => m.content)?.[0] ??
     "";
@@ -121,10 +119,4 @@ app.post("/", async (c) => {
   return c.json(result);
 });
 
-const port = 3000;
-console.log(`Server is running on port ${port}`);
-
-serve({
-  fetch: app.fetch,
-  port,
-});
+export default app;

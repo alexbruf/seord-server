@@ -1,0 +1,12 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "seord-server",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-04-01",
+  "routes": [
+    {
+      "pattern": "seord.bruf.io",
+      "custom_domain": true
+    }
+  ]
+}
